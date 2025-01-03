@@ -21,18 +21,28 @@ def reset_device(serial_port):
     reset_packet = [0xFF, 0xFE, 0x00, 0x02, 0xF1, 0x0C]
     send_packet(serial_port, reset_packet)
     time.sleep(0.5)
+def CCW_90(serial_port):
+    # Reset command (example, update as needed)
+    reset_packet = [0xFF, 0xFE, 0x00, 0x07, 0x47, 0x01, 0x01, 0x23, 0x28, 0x00, 0x64]
+    send_packet(serial_port, reset_packet)
+    time.sleep(3)
 
+def CW_90(serial_port):
+    # Reset command (example, update as needed)
+    reset_packet = [0xFF, 0xFE, 0x00, 0x07, 0x48, 0x01, 0x00, 0x23, 0x28, 0x00, 0x64]
+    send_packet(serial_port, reset_packet)
+    time.sleep(3)
 def CCW_180(serial_port):
     # Reset command (example, update as needed)
-    reset_packet = [0xFF, 0xFE, 0x00, 0x07, 0x2F, 0x01, 0x00, 0x46, 0x50, 0x00, 0x32]
+    reset_packet = [0xFF, 0xFE, 0x00, 0x07, 0xFD, 0x01, 0x00, 0x46, 0x50, 0x00, 0x64]
     send_packet(serial_port, reset_packet)
-    time.sleep(0.5)
+    time.sleep(1)
 
 def CW_180(serial_port):
     # Reset command (example, update as needed)
-    reset_packet = [0xFF, 0xFE, 0x00, 0x07, 0x2E, 0x01, 0x01, 0x46, 0x50, 0x00, 0x32]
+    reset_packet = [0xFF, 0xFE, 0x00, 0x07, 0xFC, 0x01, 0x01, 0x46, 0x50, 0x00, 0x64]
     send_packet(serial_port, reset_packet)
-    time.sleep(0.5)
+    time.sleep(1)
 
 def CW_360(serial_port):
     # Reset command (example, update as needed)
@@ -73,11 +83,11 @@ def main():
 
 
         CCW_180(ser)
-        time.sleep(10)
+        time.sleep(1)
         reset_device(ser)
 
         CW_180(ser)
-        time.sleep(10)
+        time.sleep(1)
         #CW_360(ser)
        
         print("Receiving response...")

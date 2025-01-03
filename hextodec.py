@@ -1,39 +1,26 @@
-# Function to convert Hexadecimal to Decimal
-def hex_to_decimal(hex_num):
-    return int(hex_num, 16)
+# Using the hex function
+decimal_number = int(input("Enter the decimal Number: ")) * 100  # Input and multiply by 100
+hexadecimal_value = hex(decimal_number)  # Convert decimal to hex (string)
+print("Hexadecimal value:", hexadecimal_value)  # Print the hexadecimal string
 
-# Function to convert Decimal to Hexadecimal
-def decimal_to_hex(decimal_num):
-    return hex(decimal_num)
+# Convert the hexadecimal string back to an integer (excluding '0x' prefix)
 
-# Function to convert arrays of Hexadecimal to Decimal
-def convert_hex_array_to_decimal(hex_array):
-    return [hex_to_decimal(h) for h in hex_array]
+num = int(hexadecimal_value, 16)
 
-# Function to convert arrays of Decimal to Hexadecimal
-def convert_decimal_array_to_hex(decimal_array):
-    return [decimal_to_hex(d) for d in decimal_array]
+# Extract the two bytes
+first_part = (num >> 8) & 0xFF  # Extract the first byte (most significant byte)
+second_part = num & 0xFF  # Extract the second byte (least significant byte)
 
-# Taking input from the user for an array of hexadecimal numbers
-hex_array_input = input("Enter an array of Hexadecimal numbers (comma-separated): ")
-hex_array = hex_array_input.split(',')
+# Store the result in a list of integers
+angle_byte = [first_part, second_part]
 
-# Convert Hexadecimal array to Decimal array
-decimal_result_array = convert_hex_array_to_decimal(hex_array)
-print(f"Hexadecimal to Decimal conversion: {decimal_result_array}")
+# Example packet
+packet = [0xFF, 0xFE, 0x00, 0x07, 0x47, 0x01, 0x01, 0x00, 0x64]
 
-# Taking input from the user for an array of decimal numbers
-decimal_array_input = input("Enter an array of Decimal numbers (comma-separated): ")
-decimal_array = [int(d) for d in decimal_array_input.split(',')]
+# Insert the angle bytes into the packet at position 7
+packet[7:7] = angle_byte
+print(angle_byte)
 
-# Convert Decimal array to Hexadecimal array
-hex_result_array = convert_decimal_array_to_hex(decimal_array)
-print(f"Decimal to Hexadecimal conversion: {hex_result_array}")
-
-def calculate_checksum(packet):
-    """
-    Calculate the checksum by summing all bytes in the packet
-    (except header and checksum itself), performing a bitwise NOT, and keeping the least significant byte.
-    """
-    checksum = ~sum(packet[2:]) & 0xFF
-    return checksum
+# Display the packet with hexadecimal formatting
+formatted_packet = "[" + ", ".join(hex(x) for x in packet) + "]"
+print(formatted_packet)

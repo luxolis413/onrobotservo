@@ -1,6 +1,20 @@
 import serial
 import time
 
+def dec_hex(number):
+    
+    hexadecimal_value = hex(number)
+    num = int(hexadecimal_value, 16)
+
+# Extract the two bytes
+    first_part = (num >> 8) & 0xFF  # Extract the first byte (most significant byte)
+    second_part = num & 0xFF  # Extract the second byte (least significant byte)
+
+# Store the result in a list of integers
+    angle_byte = [first_part, second_part]
+    print(angle_byte)
+    return angle_byte
+
 def calculate_checksum(packet):
     """
     Calculate the checksum by summing all bytes in the packet
@@ -8,19 +22,10 @@ def calculate_checksum(packet):
     """
     checksum = ~sum(packet) & 0xFF
     print("CheckSum: ", checksum)
-    packet.insert(4, checksum)
     return checksum
 
 def send_packet(serial_port, packet):
-    """
-    Send a packet through the serial port.
-    """
-    checksum = calculate_checksum(packet)
-    # Convert the modified data to a formatted string with commas and brackets
-    hex_data = "[ " + ", ".join(f"0x{byte:02X}" for byte in packet) + " ]"
-
-    print(f"Modified Data (Hexadecimal Array): {hex_data}")
-    print(f"Checksum Byte: 0x{checksum:02X}")
+    serial_port.write(bytearray(packet))
     print(f"Sent: {packet}")
 
 def receive_response(serial_port, buffer_size=64):
@@ -30,6 +35,59 @@ def receive_response(serial_port, buffer_size=64):
     response = serial_port.read(buffer_size)
     print(f"Received: {list(response)}")
     return response
+
+def reset_device(serial_port):
+    # Reset command (example, update as needed)
+    reset_packet = [0xFF, 0xFE, 0x00, 0x02, 0xF1, 0x0C]
+    send_packet(serial_port, reset_packet)
+    time.sleep(0.5)
+
+def bps_115200(serial_port):
+    reset_packet = [0xFF, 0xFE, 0x00, 0x03, 0xE8, 0x07, 0x0D]
+    send_packet(serial_port, reset_packet)
+    time.sleep(0.5)
+
+def ping_IDO(serial_port):
+    reset_packet = [0xFF, 0xFE, 0x00, 0x02, 0x2D, 0xD0]
+    send_packet(serial_port, reset_packet)
+    time.sleep(0.5)
+def CCW_90(serial_port):
+    # Reset command (example, update as needed)
+    packet = [0xFF, 0xFE, 0x00, 0x07, 0x47, 0x01, 0x01, 0x00, 0x64]
+    number = int(input("Enter the decimal Number:  "))*100
+    angle_byte = dec_hex(number)
+    packet[7:7] = angle_byte
+    print(angle_byte)
+    formatted_packet = "[" + ", ".join(hex(x) for x in packet) + "]"
+    checksum_byte = calculate_checksum(formatted_packet)
+    packet.insert(4, checksum_byte)
+    reset_packet = "[ " + ", ".join(f"0x{byte:02X}" for byte in packet) + " ]"
+    
+    send_packet(serial_port, reset_packet)
+    time.sleep(3)
+
+def CW_90(serial_port):
+    # Reset command (example, update as needed)
+    reset_packet = [0xFF, 0xFE, 0x00, 0x07, 0x48, 0x01, 0x00, 0x23, 0x28, 0x00, 0x64]
+    send_packet(serial_port, reset_packet)
+    time.sleep(3)
+def CCW_180(serial_port):
+    # Reset command (example, update as needed)
+    reset_packet = [0xFF, 0xFE, 0x00, 0x07, 0xFD, 0x01, 0x00, 0x46, 0x50, 0x00, 0x64]
+    send_packet(serial_port, reset_packet)
+    time.sleep(1)
+
+def CW_180(serial_port):
+    # Reset command (example, update as needed)
+    reset_packet = [0xFF, 0xFE, 0x00, 0x07, 0xFC, 0x01, 0x01, 0x46, 0x50, 0x00, 0x64]
+    send_packet(serial_port, reset_packet)
+    time.sleep(1)
+
+def CW_360(serial_port):
+    # Reset command (example, update as needed)
+    reset_packet = [ 0xFF, 0xFE, 0x00, 0x06, 0x98, 0x02, 0x01, 0x8C, 0xA0, 0x32]
+    send_packet(serial_port, reset_packet)
+    time.sleep(0.5)
 
 def main():
     # Configure the serial port
@@ -46,28 +104,27 @@ def main():
         ser.open()
 
     try:
-        # Turn On the servo
-        packet = [0xFF, 0xFE, 0x00, 0x03, 0x25, 0xD7, 0x00 ]
-        # Example 1: Set ID0 to 115,200 bps
-        packet = [0xFF, 0xFE, 0x00, 0x03, 0xE8, 0x07, 0x0D] 
-        send_packet(ser, packet)
-        time.sleep(0.1)
+         # Ensure the serial port is open
+        if not ser.is_open:
+            ser.open()
 
-        # Example 2: Send Ping to ID0
-        packet = [0xFF, 0xFE, 0x00, 0x02, 0x2D, 0xD0]
-        send_packet(ser, packet)
-        time.sleep(0.1)
+        print("Resetting device...")
+        reset_device(ser)
+        time.sleep(1)
+        bps_115200(ser)
+        time.sleep(1)
+        ping_IDO(ser)
+        time.sleep(1)
+        
+        CCW_90(ser)
+        time.sleep(5)
+        reset_device(ser)
 
-        # Example 3: Move to 180 degrees at 5 RPM in CCW
-        packet = [0xFF, 0xFE, 0x00, 0x07, 0x2F, 0x01, 0x00, 0x46, 0x50, 0x00, 0x32]
-        # time.sleep(5)
-        # packet = [0xFF, 0xFE, 0x00, 0x06, 0x98, 0x02, 0x01, 0x8C, 0xA0, 0x32]
-        # time.sleep(5)
-        #packet = [0xFF, 0xFE, 0x00, 0x06, 0xD9, 0x04, 0xFE, 0xFE, 0x00, 0x20]
-        send_packet(ser, packet)
-        time.sleep(0.1)
-
-        # Reading response (if any)
+        CW_90(ser)
+        time.sleep(5)
+        #CW_360(ser)
+       
+        print("Receiving response...")
         response = receive_response(ser)
 
     except Exception as e:
